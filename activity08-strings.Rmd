@@ -1,8 +1,12 @@
 ---
 title: "Activity 8"
-author: "Name"
+author: "Nathan Funckes"
 output: github_document
 ---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(error = TRUE)
+```
 
 ## Data and packages
 
@@ -10,7 +14,9 @@ Load the entirety of the `{tidyverse}`.
 You will do a little work with dates in this activity so also load `{lubridate}`.
 Be sure to avoid printing out any unnecessary information and give the code chunk a meaningful name.
 
-
+```{r load_packages, message = FALSE}
+library(tidyverse)
+```
 
 
 Cheatsheets that you might want to add to your collection:
@@ -23,6 +29,9 @@ Notice that this file is a tab-delimited file that is stored as a `.txt` file.
 Therefore, you will need to use either `read_delim` with a `delim = ...` argument or (better) `read_tsv`.
 Assign the file to a meaningful object name, be sure to avoid printing any unnecessary information, and give the code chunk a meaningful name.
 
+```{r}
+billboard_songs <- read_tsv(here::here("data","billboard_songs.txt"))
+```
 
 
 
@@ -46,7 +55,7 @@ This is a long dataset (34,605 observations)!
 When you look at ``chart date`` you'll notice that it was read in as a numeric (`<dbl>`) variable type.
 What does the format of the date appear to be in?
 
-**Response**:
+**Response**: double
 
 
 In this activity, we will be using `str_...` functions to split or find patterns in strings of information.
@@ -58,7 +67,11 @@ Do the following with your dataset:
 
 Once you have verified that this worked, overwrite your data object.
 
-
+```{r}
+billboard_songs$date <- as.character(billboard_songs$`chart date`)
+billboard_songs$date <- lubridate::make_date(substring(billboard_songs$date,0,4),substring(billboard_songs$date,5,6),substring(billboard_songs$date,7,8))
+billboard_songs
+```
 
 
 #### Analyzing using dates
@@ -67,6 +80,12 @@ What 10 songs spent the longest on the charts?
 Give only the title, artists, and weeks.
 
 
+```{r}
+billboard_songs%>%
+  top_n(10,`weeks on chart`)%>%
+  select(c("title","artist","weeks on chart"))%>%
+  arrange(desc(`weeks on chart`))
+```
 
 
 **Response**:
@@ -75,10 +94,13 @@ Give only the title, artists, and weeks.
 What date did the oldest song(s) in this dataset leave the charts?
 Give only the *distinct* dates.
 
+```{r}
+billboard_songs%>%
+  arrange(desc(date))
+```
 
 
-
-**Response**:
+**Response**: 2015-03-07
 
 
 ### Artists who work together
@@ -113,6 +135,19 @@ Using the `artist_credentials` vector, do the following. I recommend that you do
 
 When you verify that this works, save this information into an object called `feat_artist`.
 
+```{r}
+artist_credentials <- billboard_songs%>%
+pull(artist)
+
+feat_artist <- artist_credentials%>%
+  str_subset("featuring")%>%
+    str_replace_all(".*featuring ","")%>%
+      str_split(",|&|or")%>%
+        unlist()%>%
+          str_trim()
+
+sort(table(feat_artist),decreasing=TRUE)[1]
+```
 
 
 
@@ -121,7 +156,7 @@ Now you can use this information to answer the question above.
 
 
 
-**Response**:
+**Response**: LIL Wayne
 
 
 Which artist has **collaborated** on the most Billboard charting songs?
